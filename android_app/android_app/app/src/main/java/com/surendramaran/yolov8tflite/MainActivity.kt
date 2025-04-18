@@ -1,6 +1,7 @@
 package com.surendramaran.yolov8tflite
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -12,22 +13,23 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.surendramaran.yolov8tflite.Constants.LABELS_PATH
 import com.surendramaran.yolov8tflite.Constants.MODEL_PATH
 import com.surendramaran.yolov8tflite.databinding.ActivityMainBinding
+import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import android.content.Intent
-import java.io.File
 
 class MainActivity : AppCompatActivity(), Detector.DetectorListener {
+
     private lateinit var binding: ActivityMainBinding
     private var camera: Camera? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private lateinit var detector: Detector
     private lateinit var cameraExecutor: ExecutorService
+    private var preview: Preview? = null
+    private var imageAnalyzer: ImageAnalysis? = null
     private val isFrontCamera = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,21 +37,28 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        detector = Detector(baseContext, MODEL_PATH, LABELS_PATH, this)
-        detector.setup()
-
         if (allPermissionsGranted()) {
-            startCamera()
+            initializeDetectorAndCamera()
         } else {
-            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+            requestPermissionLauncher.launch(REQUIRED_PERMISSIONS)
         }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        // Pick video button
         binding.pickVideoButton.setOnClickListener {
-            pickVideo()
+            pickExternalVideo()
         }
+
+        binding.browseDemoVideosButton.setOnClickListener {
+            val intent = Intent(this, VideoListActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    private fun initializeDetectorAndCamera() {
+        detector = Detector(baseContext, MODEL_PATH, LABELS_PATH, this)
+        detector.setup()
+        startCamera()
     }
 
     private fun startCamera() {
@@ -88,12 +97,7 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
             val matrix = Matrix().apply {
                 postRotate(imageProxy.imageInfo.rotationDegrees.toFloat())
                 if (isFrontCamera) {
-                    postScale(
-                        -1f,
-                        1f,
-                        imageProxy.width.toFloat(),
-                        imageProxy.height.toFloat()
-                    )
+                    postScale(-1f, 1f, imageProxy.width.toFloat(), imageProxy.height.toFloat())
                 }
             }
 
@@ -123,28 +127,42 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
         }
     }
 
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
+    private fun allPermissionsGranted(): Boolean {
+        val cameraGranted = ContextCompat.checkSelfPermission(
+            baseContext,
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val mediaGranted = ContextCompat.checkSelfPermission(
+            baseContext,
+            Manifest.permission.READ_MEDIA_VIDEO
+        ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    baseContext,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED
+
+        return cameraGranted && mediaGranted
     }
 
     private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
         if (permissions.all { it.value }) {
-            startCamera()
+            initializeDetectorAndCamera()
         } else {
-            Toast.makeText(this, "Permissions not granted.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Permissions not granted. Please allow camera and media access.", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // Video picking
-    private val pickVideoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    private val pickExternalVideoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             runVideoInference(it)
         }
     }
 
-    private fun pickVideo() {
-        pickVideoLauncher.launch("video/*")
+    private fun pickExternalVideo() {
+        pickExternalVideoLauncher.launch("video/*")
     }
 
     private fun runVideoInference(uri: Uri) {
@@ -160,14 +178,18 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        detector.clear()
+        if (::detector.isInitialized) {
+            detector.clear()
+        }
         cameraExecutor.shutdown()
     }
 
     override fun onResume() {
         super.onResume()
         if (allPermissionsGranted()) {
-            startCamera()
+            if (!::detector.isInitialized) {
+                initializeDetectorAndCamera()
+            }
         } else {
             requestPermissionLauncher.launch(REQUIRED_PERMISSIONS)
         }
@@ -188,16 +210,10 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
     }
 
     companion object {
-        private const val TAG = "Camera"
-        private const val REQUEST_CODE_PERMISSIONS = 10
+        private const val TAG = "MainActivity"
         private val REQUIRED_PERMISSIONS = mutableListOf(
             Manifest.permission.CAMERA,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_MEDIA_VIDEO
         ).toTypedArray()
     }
-
-    private var preview: Preview? = null
-    private var imageAnalyzer: ImageAnalysis? = null
 }

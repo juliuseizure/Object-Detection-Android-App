@@ -6,7 +6,8 @@
     android:id="@+id/camera_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black">
+    android:background="@color/black"
+    tools:context=".MainActivity">
 
     <androidx.camera.view.PreviewView
         android:id="@+id/view_finder"
@@ -40,17 +41,26 @@
         android:layout_height="wrap_content"
         android:layout_margin="32dp"
         android:textColor="@color/white"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         tools:text="100ms" />
 
-    <!-- New Button for picking a video -->
     <Button
         android:id="@+id/pickVideoButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Pick Video for Inference"
+        android:text="Pick External Video"
         app:layout_constraintTop_toBottomOf="@id/inferenceTime"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp" />
+
+    <Button
+        android:id="@+id/browseDemoVideosButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Browse Demo Videos"
+        app:layout_constraintTop_toBottomOf="@id/pickVideoButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp" />
