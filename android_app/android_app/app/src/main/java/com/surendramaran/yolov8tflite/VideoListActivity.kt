@@ -6,6 +6,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -39,7 +41,6 @@ class VideoListActivity : AppCompatActivity(), VideoListAdapter.OnItemClickListe
             adapter = videoListAdapter
         }
 
-        // Initialize Detector
         detector = Detector(baseContext, Constants.MODEL_PATH, Constants.LABELS_PATH, object : Detector.DetectorListener {
             override fun onEmptyDetect() {}
             override fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long) {}
@@ -48,16 +49,12 @@ class VideoListActivity : AppCompatActivity(), VideoListAdapter.OnItemClickListe
     }
 
     private fun getDemoVideos(): List<File> {
-
-        //  THIS IS A HARDCODED PATH FOR DEMO VIDEOS
-
         val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "proj_vids/mid")
         if (!directory.exists()) {
             return emptyList()
         }
         return directory.listFiles { file -> file.extension.equals("mp4", ignoreCase = true) }?.toList() ?: emptyList()
     }
-
 
     override fun onItemClick(file: File) {
         val options = arrayOf("Play Video", "Run Inference")
@@ -83,29 +80,35 @@ class VideoListActivity : AppCompatActivity(), VideoListAdapter.OnItemClickListe
         showLoadingSpinner()
 
         val processor = VideoProcessor(this, detector)
-        processor.processVideo(Uri.fromFile(file)) { outputPath ->
-            runOnUiThread {
-                hideLoadingSpinner()
-                Toast.makeText(this, "✅ Saved to app's Movies folder!", Toast.LENGTH_SHORT).show()
+        processor.processVideo(
+            Uri.fromFile(file),
+            onComplete = { outputPath ->
+                runOnUiThread {
+                    hideLoadingSpinner()
+                    Toast.makeText(this, "✅ Saved to app's Movies folder!", Toast.LENGTH_SHORT).show()
 
-                // Attempt to open Movies folder
-                val moviesFolder = getExternalFilesDir(Environment.DIRECTORY_MOVIES)
-                val intentShowFolder = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(Uri.fromFile(moviesFolder), "resource/folder")
-                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                }
-                try {
-                    startActivity(intentShowFolder)
-                } catch (e: Exception) {
-                    Log.e("VideoListActivity", "Could not open folder: ${e.localizedMessage}")
-                }
+                    val moviesFolder = getExternalFilesDir(Environment.DIRECTORY_MOVIES)
+                    val intentShowFolder = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(Uri.fromFile(moviesFolder), "resource/folder")
+                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    }
+                    try {
+                        startActivity(intentShowFolder)
+                    } catch (e: Exception) {
+                        Log.e("VideoListActivity", "Could not open folder: ${e.localizedMessage}")
+                    }
 
-                // Then open the processed video
-                val intent = Intent(this, VideoPlayerActivity::class.java)
-                intent.putExtra("videoUri", Uri.fromFile(File(outputPath)))
-                startActivity(intent)
+                    val intent = Intent(this, VideoPlayerActivity::class.java)
+                    intent.putExtra("videoUri", Uri.fromFile(File(outputPath)))
+                    startActivity(intent)
+                }
+            },
+            progressCallback = { progress ->
+                runOnUiThread {
+                    updateProgressSpinner(progress)
+                }
             }
-        }
+        )
     }
 
     private fun showLoadingSpinner() {
@@ -120,6 +123,16 @@ class VideoListActivity : AppCompatActivity(), VideoListAdapter.OnItemClickListe
 
     private fun hideLoadingSpinner() {
         loadingDialog?.dismiss()
+    }
+
+    private fun updateProgressSpinner(progress: Int) {
+        if (loadingDialog != null && loadingDialog!!.isShowing) {
+            val textView = loadingDialog!!.findViewById<TextView>(R.id.processingText)
+            textView?.text = "Processing: $progress%"
+
+            val progressBar = loadingDialog!!.findViewById<ProgressBar>(R.id.progressBar)
+            progressBar?.progress = progress
+        }
     }
 
     override fun onDestroy() {

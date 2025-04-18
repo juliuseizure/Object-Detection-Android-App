@@ -12,7 +12,11 @@ import java.util.concurrent.CountDownLatch
 
 class VideoProcessor(private val context: Context, private val detector: Detector) {
 
-    fun processVideo(inputUri: Uri, onComplete: (outputPath: String) -> Unit) {
+    fun processVideo(
+        inputUri: Uri,
+        onComplete: (outputPath: String) -> Unit,
+        progressCallback: (progress: Int) -> Unit = {}
+    ) {
         Thread {
             try {
                 val retriever = MediaMetadataRetriever()
@@ -21,7 +25,8 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
                 val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toInt() ?: 0
                 val height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toInt() ?: 0
                 val durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
-                val frameRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)?.toFloat()?.toInt() ?: 30
+                val frameRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)?.toFloat()?.toInt()
+                    ?: 30
 
                 val outputFile = File(
                     context.getExternalFilesDir(Environment.DIRECTORY_MOVIES),
@@ -45,6 +50,8 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
 
                 var currentTimeMs = 0L
                 val frameIntervalMs = (1000 / frameRate)
+                var processedFrames = 0
+                val totalFrames = (durationMs / frameIntervalMs).toInt().coerceAtLeast(1)
 
                 while (currentTimeMs < durationMs) {
                     val bitmap = retriever.getFrameAtTime(currentTimeMs * 1000, MediaMetadataRetriever.OPTION_CLOSEST)
@@ -60,12 +67,13 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
 
                     feedFrameToEncoder(mutableBitmap, inputSurface)
 
+                    processedFrames++
+                    val progress = (processedFrames * 100) / totalFrames
+                    progressCallback(progress.coerceIn(0, 100))
+
                     currentTimeMs += frameIntervalMs
                 }
 
-
-
-                // Signal end of stream
                 encoder.signalEndOfInputStream()
 
                 var outputTrackIndex = -1
@@ -104,6 +112,7 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
 
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to process video: ${e.localizedMessage}", e)
+                onComplete("") // Always call onComplete even on error
             }
         }.start()
     }
@@ -126,7 +135,7 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
 
         tempDetector.setup()
         tempDetector.detect(bitmap)
-        latch.await() // Wait for detection to complete
+        latch.await()
         tempDetector.clear()
 
         return detectedBoxes

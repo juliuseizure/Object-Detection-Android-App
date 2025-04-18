@@ -167,13 +167,16 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
 
     private fun runVideoInference(uri: Uri) {
         val processor = VideoProcessor(this, detector)
-        processor.processVideo(uri) { outputPath ->
-            runOnUiThread {
-                val intent = Intent(this, VideoPlayerActivity::class.java)
-                intent.putExtra("videoUri", Uri.fromFile(File(outputPath)))
-                startActivity(intent)
+        processor.processVideo(
+            inputUri = uri,
+            onComplete = { outputPath ->
+                runOnUiThread {
+                    val intent = Intent(this, VideoPlayerActivity::class.java)
+                    intent.putExtra("videoUri", Uri.fromFile(File(outputPath)))
+                    startActivity(intent)
+                }
             }
-        }
+        )
     }
 
     override fun onDestroy() {
