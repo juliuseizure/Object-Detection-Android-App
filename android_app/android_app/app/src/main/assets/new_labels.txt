@@ -1,0 +1,4 @@
+Couple_Failed
+Couple_Good
+Couple_Obstructed
+No_Couple
