@@ -27,10 +27,12 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
                 val frameRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)?.toFloat()?.toInt()
                     ?: 30
 
-                val outputFile = File(
-                    context.getExternalFilesDir(Environment.DIRECTORY_MOVIES),
-                    getOutputFileName(inputUri)
-                )
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val inferredDir = File(downloadsDir, "proj_vids/inferred")
+                if (!inferredDir.exists()) {
+                    inferredDir.mkdirs() // create folder if missing
+                }
+                val outputFile = File(inferredDir, getOutputFileName(inputUri))
 
                 val codec = MediaCodec.createEncoderByType("video/avc")
                 val format = MediaFormat.createVideoFormat("video/avc", width, height)

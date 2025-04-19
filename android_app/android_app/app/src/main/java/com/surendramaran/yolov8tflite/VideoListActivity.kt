@@ -49,12 +49,16 @@ class VideoListActivity : AppCompatActivity(), VideoListAdapter.OnItemClickListe
     }
 
     private fun getDemoVideos(): List<File> {
-        val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "proj_vids")
+        val directory = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+            "proj_vids/originals"
+        )
         if (!directory.exists()) {
             return emptyList()
         }
         return directory.listFiles { file -> file.extension.equals("mp4", ignoreCase = true) }?.toList() ?: emptyList()
     }
+
 
     override fun onItemClick(file: File) {
         val options = arrayOf("Play Video", "Run Inference")

@@ -37,6 +37,12 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
             val intent = Intent(this, VideoListActivity::class.java)
             startActivity(intent)
         }
+
+        binding.browseInferredVideosButton.setOnClickListener {
+            val intent = Intent(this, InferredVideoListActivity::class.java)
+            startActivity(intent)
+        }
+
     }
 
     private fun initializeDetector() {
