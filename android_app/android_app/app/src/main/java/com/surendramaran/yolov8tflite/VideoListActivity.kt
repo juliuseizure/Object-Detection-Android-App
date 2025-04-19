@@ -49,7 +49,7 @@ class VideoListActivity : AppCompatActivity(), VideoListAdapter.OnItemClickListe
     }
 
     private fun getDemoVideos(): List<File> {
-        val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "proj_vids/mid")
+        val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "proj_vids")
         if (!directory.exists()) {
             return emptyList()
         }

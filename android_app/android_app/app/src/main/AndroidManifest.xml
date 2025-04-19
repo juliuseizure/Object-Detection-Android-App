@@ -2,15 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Required for camera live inference -->
-    <uses-feature android:name="android.hardware.camera" />
-    <uses-permission android:name="android.permission.CAMERA" />
-
-    <!-- Required for accessing and saving video files -->
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Permissions needed for video file access -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <!-- Android 13 and above uses this -->
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
     <application
@@ -24,6 +18,7 @@
 
         <activity
             android:name=".VideoPlayerActivity"
+            android:configChanges="orientation|screenSize"
             android:exported="false" />
 
         <activity
