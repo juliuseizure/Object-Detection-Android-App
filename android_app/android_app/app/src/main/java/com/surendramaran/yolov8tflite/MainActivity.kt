@@ -29,10 +29,6 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
             requestPermissionLauncher.launch(REQUIRED_PERMISSIONS)
         }
 
-        binding.pickVideoButton.setOnClickListener {
-            pickExternalVideo()
-        }
-
         binding.browseDemoVideosButton.setOnClickListener {
             val intent = Intent(this, VideoListActivity::class.java)
             startActivity(intent)
@@ -48,16 +44,6 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
     private fun initializeDetector() {
         detector = Detector(baseContext, MODEL_PATH, LABELS_PATH, this)
         detector.setup()
-    }
-
-    private fun pickExternalVideo() {
-        pickExternalVideoLauncher.launch("video/*")
-    }
-
-    private val pickExternalVideoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let {
-            runVideoInference(it)
-        }
     }
 
     private fun runVideoInference(uri: Uri) {
