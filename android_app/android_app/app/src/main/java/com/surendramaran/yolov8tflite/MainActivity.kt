@@ -13,8 +13,9 @@ import com.surendramaran.yolov8tflite.Constants.MODEL_PATH
 import com.surendramaran.yolov8tflite.databinding.ActivityMainBinding
 import java.io.File
 
-class MainActivity : AppCompatActivity(), Detector.DetectorListener {
-
+class MainActivity :
+    AppCompatActivity(),
+    Detector.DetectorListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var detector: Detector
 
@@ -38,7 +39,6 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
             val intent = Intent(this, InferredVideoListActivity::class.java)
             startActivity(intent)
         }
-
     }
 
     private fun initializeDetector() {
@@ -56,30 +56,30 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
                     intent.putExtra("videoUri", Uri.fromFile(File(outputPath)))
                     startActivity(intent)
                 }
-            }
+            },
         )
     }
 
-    private fun allPermissionsGranted(): Boolean {
-        return ContextCompat.checkSelfPermission(
+    private fun allPermissionsGranted(): Boolean =
+        ContextCompat.checkSelfPermission(
             baseContext,
-            Manifest.permission.READ_MEDIA_VIDEO
+            Manifest.permission.READ_MEDIA_VIDEO,
         ) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(
-                    baseContext,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-    }
+            ContextCompat.checkSelfPermission(
+                baseContext,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
 
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        if (permissions.all { it.value }) {
-            initializeDetector()
-        } else {
-            Toast.makeText(this, "Permissions not granted. Please allow media access.", Toast.LENGTH_SHORT).show()
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions(),
+        ) { permissions ->
+            if (permissions.all { it.value }) {
+                initializeDetector()
+            } else {
+                Toast.makeText(this, "Permissions not granted. Please allow media access.", Toast.LENGTH_SHORT).show()
+            }
         }
-    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -92,14 +92,18 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
         // No live detection overlay needed.
     }
 
-    override fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long) {
+    override fun onDetect(
+        boundingBoxes: List<BoundingBox>,
+        inferenceTime: Long,
+    ) {
         // No live detection overlay needed.
     }
 
     companion object {
         private const val TAG = "MainActivity"
-        private val REQUIRED_PERMISSIONS = arrayOf(
-            Manifest.permission.READ_MEDIA_VIDEO
-        )
+        private val REQUIRED_PERMISSIONS =
+            arrayOf(
+                Manifest.permission.READ_MEDIA_VIDEO,
+            )
     }
 }

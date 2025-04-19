@@ -14,8 +14,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.surendramaran.yolov8tflite.databinding.ActivityVideoListBinding
 import java.io.File
 
-class VideoListActivity : AppCompatActivity(), VideoListAdapter.OnItemClickListener {
-
+class VideoListActivity :
+    AppCompatActivity(),
+    VideoListAdapter.OnItemClickListener {
     private lateinit var binding: ActivityVideoListBinding
     private lateinit var videoListAdapter: VideoListAdapter
     private lateinit var detector: Detector
@@ -41,37 +42,47 @@ class VideoListActivity : AppCompatActivity(), VideoListAdapter.OnItemClickListe
             adapter = videoListAdapter
         }
 
-        detector = Detector(baseContext, Constants.MODEL_PATH, Constants.LABELS_PATH, object : Detector.DetectorListener {
-            override fun onEmptyDetect() {}
-            override fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long) {}
-        })
+        detector =
+            Detector(
+                baseContext,
+                Constants.MODEL_PATH,
+                Constants.LABELS_PATH,
+                object : Detector.DetectorListener {
+                    override fun onEmptyDetect() {}
+
+                    override fun onDetect(
+                        boundingBoxes: List<BoundingBox>,
+                        inferenceTime: Long,
+                    ) {}
+                },
+            )
         detector.setup()
     }
 
     private fun getDemoVideos(): List<File> {
-        val directory = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "proj_vids/originals"
-        )
+        val directory =
+            File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                "proj_vids/originals",
+            )
         if (!directory.exists()) {
             return emptyList()
         }
         return directory.listFiles { file -> file.extension.equals("mp4", ignoreCase = true) }?.toList() ?: emptyList()
     }
 
-
     override fun onItemClick(file: File) {
         val options = arrayOf("Play Video", "Run Inference")
 
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle("Choose an action")
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> playVideo(file)
                     1 -> runInference(file)
                 }
-            }
-            .show()
+            }.show()
     }
 
     private fun playVideo(file: File) {
@@ -92,10 +103,11 @@ class VideoListActivity : AppCompatActivity(), VideoListAdapter.OnItemClickListe
                     Toast.makeText(this, "✅ Saved to app's Movies folder!", Toast.LENGTH_SHORT).show()
 
                     val moviesFolder = getExternalFilesDir(Environment.DIRECTORY_MOVIES)
-                    val intentShowFolder = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(Uri.fromFile(moviesFolder), "resource/folder")
-                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    }
+                    val intentShowFolder =
+                        Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(Uri.fromFile(moviesFolder), "resource/folder")
+                            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        }
                     try {
                         startActivity(intentShowFolder)
                     } catch (e: Exception) {
@@ -111,16 +123,18 @@ class VideoListActivity : AppCompatActivity(), VideoListAdapter.OnItemClickListe
                 runOnUiThread {
                     updateProgressSpinner(progress)
                 }
-            }
+            },
         )
     }
 
     private fun showLoadingSpinner() {
         if (loadingDialog == null) {
-            loadingDialog = AlertDialog.Builder(this)
-                .setCancelable(false)
-                .setView(R.layout.dialog_loading_spinner)
-                .create()
+            loadingDialog =
+                AlertDialog
+                    .Builder(this)
+                    .setCancelable(false)
+                    .setView(R.layout.dialog_loading_spinner)
+                    .create()
         }
         loadingDialog?.show()
     }

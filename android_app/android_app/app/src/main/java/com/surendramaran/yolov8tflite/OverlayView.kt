@@ -5,15 +5,14 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
-import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
-import java.util.LinkedList
-import kotlin.math.max
 
-class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
-
+class OverlayView(
+    context: Context?,
+    attrs: AttributeSet?,
+) : View(context, attrs) {
     private var results = listOf<BoundingBox>()
     private var boxPaint = Paint()
     private var textBackgroundPaint = Paint()
@@ -67,10 +66,9 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
                 top,
                 left + textWidth + BOUNDING_RECT_TEXT_PADDING,
                 top + textHeight + BOUNDING_RECT_TEXT_PADDING,
-                textBackgroundPaint
+                textBackgroundPaint,
             )
             canvas.drawText(drawableText, left, top + bounds.height(), textPaint)
-
         }
     }
 

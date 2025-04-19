@@ -11,9 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.surendramaran.yolov8tflite.databinding.ActivityVideoPlayerBinding
 
 class VideoPlayerActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityVideoPlayerBinding
-    private lateinit var videoUri: Uri  // 🌟 Saved once!
+    private lateinit var videoUri: Uri // 🌟 Saved once!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,7 +60,6 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
 
             binding.videoView.layoutParams = layoutParams
-
         } catch (e: Exception) {
             Log.e("VideoPlayerActivity", "Error adjusting aspect ratio", e)
         }

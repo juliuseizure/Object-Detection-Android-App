@@ -20,9 +20,8 @@ class Detector(
     private val context: Context,
     private val modelPath: String,
     private val labelPath: String,
-    var detectorListener: DetectorListener   // ✨ <-- was "private val", now "var" and public
+    var detectorListener: DetectorListener, // <-- was "private val", now "var" and public
 ) {
-
     private var interpreter: Interpreter? = null
     private var labels = mutableListOf<String>()
 
@@ -31,10 +30,12 @@ class Detector(
     private var numChannel = 0
     private var numElements = 0
 
-    private val imageProcessor = ImageProcessor.Builder()
-        .add(NormalizeOp(INPUT_MEAN, INPUT_STANDARD_DEVIATION))
-        .add(CastOp(INPUT_IMAGE_TYPE))
-        .build()
+    private val imageProcessor =
+        ImageProcessor
+            .Builder()
+            .add(NormalizeOp(INPUT_MEAN, INPUT_STANDARD_DEVIATION))
+            .add(CastOp(INPUT_IMAGE_TYPE))
+            .build()
 
     fun setup() {
         val model = FileUtil.loadMappedFile(context, modelPath)
@@ -88,7 +89,7 @@ class Detector(
         val processedImage = imageProcessor.process(tensorImage)
         val imageBuffer = processedImage.buffer
 
-        val output = TensorBuffer.createFixedSize(intArrayOf(1 , numChannel, numElements), OUTPUT_IMAGE_TYPE)
+        val output = TensorBuffer.createFixedSize(intArrayOf(1, numChannel, numElements), OUTPUT_IMAGE_TYPE)
         interpreter?.run(imageBuffer, output.buffer)
 
         val bestBoxes = bestBox(output.floatArray)
@@ -136,10 +137,18 @@ class Detector(
 
                 boundingBoxes.add(
                     BoundingBox(
-                        x1 = x1, y1 = y1, x2 = x2, y2 = y2,
-                        cx = cx, cy = cy, w = w, h = h,
-                        cnf = maxConf, cls = maxIdx, clsName = clsName
-                    )
+                        x1 = x1,
+                        y1 = y1,
+                        x2 = x2,
+                        y2 = y2,
+                        cx = cx,
+                        cy = cy,
+                        w = w,
+                        h = h,
+                        cnf = maxConf,
+                        cls = maxIdx,
+                        clsName = clsName,
+                    ),
                 )
             }
         }
@@ -171,7 +180,10 @@ class Detector(
         return selectedBoxes
     }
 
-    private fun calculateIoU(box1: BoundingBox, box2: BoundingBox): Float {
+    private fun calculateIoU(
+        box1: BoundingBox,
+        box2: BoundingBox,
+    ): Float {
         val x1 = maxOf(box1.x1, box2.x1)
         val y1 = maxOf(box1.y1, box2.y1)
         val x2 = minOf(box1.x2, box2.x2)
@@ -184,7 +196,11 @@ class Detector(
 
     interface DetectorListener {
         fun onEmptyDetect()
-        fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long)
+
+        fun onDetect(
+            boundingBoxes: List<BoundingBox>,
+            inferenceTime: Long,
+        )
     }
 
     companion object {

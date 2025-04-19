@@ -8,14 +8,15 @@ import java.io.File
 
 class VideoListAdapter(
     private val videoFiles: List<File>,
-    private val listener: OnItemClickListener
+    private val listener: OnItemClickListener,
 ) : RecyclerView.Adapter<VideoListAdapter.VideoViewHolder>() {
-
     interface OnItemClickListener {
         fun onItemClick(file: File)
     }
 
-    inner class VideoViewHolder(val binding: ItemVideoBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class VideoViewHolder(
+        val binding: ItemVideoBinding,
+    ) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener {
                 listener.onItemClick(videoFiles[adapterPosition])
@@ -23,12 +24,18 @@ class VideoListAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): VideoViewHolder {
         val binding = ItemVideoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return VideoViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: VideoViewHolder,
+        position: Int,
+    ) {
         val file = videoFiles[position]
         holder.binding.videoName.text = file.name
     }

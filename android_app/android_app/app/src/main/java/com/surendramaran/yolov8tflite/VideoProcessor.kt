@@ -7,14 +7,15 @@ import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import java.io.File
-import java.nio.ByteBuffer
 
-class VideoProcessor(private val context: Context, private val detector: Detector) {
-
+class VideoProcessor(
+    private val context: Context,
+    private val detector: Detector,
+) {
     fun processVideo(
         inputUri: Uri,
         onComplete: (outputPath: String) -> Unit,
-        progressCallback: (progress: Int) -> Unit = {}
+        progressCallback: (progress: Int) -> Unit = {},
     ) {
         Thread {
             try {
@@ -24,8 +25,9 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
                 val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toInt() ?: 0
                 val height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toInt() ?: 0
                 val durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
-                val frameRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)?.toFloat()?.toInt()
-                    ?: 30
+                val frameRate =
+                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)?.toFloat()?.toInt()
+                        ?: 30
 
                 val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val inferredDir = File(downloadsDir, "proj_vids/inferred")
@@ -126,7 +128,6 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
 
                 Log.d(TAG, "Video processing completed: ${outputFile.absolutePath}")
                 onComplete(outputFile.absolutePath)
-
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to process video: ${e.localizedMessage}", e)
                 onComplete("") // Always call onComplete even on error
@@ -139,15 +140,19 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
 
         val originalListener = detector.detectorListener
 
-        detector.detectorListener = object : Detector.DetectorListener {
-            override fun onEmptyDetect() {
-                detectedBoxes = emptyList()
-            }
+        detector.detectorListener =
+            object : Detector.DetectorListener {
+                override fun onEmptyDetect() {
+                    detectedBoxes = emptyList()
+                }
 
-            override fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long) {
-                detectedBoxes = boundingBoxes
+                override fun onDetect(
+                    boundingBoxes: List<BoundingBox>,
+                    inferenceTime: Long,
+                ) {
+                    detectedBoxes = boundingBoxes
+                }
             }
-        }
 
         detector.detect(bitmap)
 
@@ -156,18 +161,23 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
         return detectedBoxes
     }
 
-    private fun drawBoundingBoxes(bitmap: Bitmap, boxes: List<BoundingBox>) {
+    private fun drawBoundingBoxes(
+        bitmap: Bitmap,
+        boxes: List<BoundingBox>,
+    ) {
         val canvas = Canvas(bitmap)
-        val paint = Paint().apply {
-            color = Color.RED
-            style = Paint.Style.STROKE
-            strokeWidth = 4f
-        }
-        val textPaint = Paint().apply {
-            color = Color.WHITE
-            textSize = 36f
-            style = Paint.Style.FILL
-        }
+        val paint =
+            Paint().apply {
+                color = Color.RED
+                style = Paint.Style.STROKE
+                strokeWidth = 4f
+            }
+        val textPaint =
+            Paint().apply {
+                color = Color.WHITE
+                textSize = 36f
+                style = Paint.Style.FILL
+            }
 
         val width = bitmap.width
         val height = bitmap.height
@@ -192,7 +202,12 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
         return yuv
     }
 
-    private fun encodeYUV420SP(yuv420sp: ByteArray, argb: IntArray, width: Int, height: Int) {
+    private fun encodeYUV420SP(
+        yuv420sp: ByteArray,
+        argb: IntArray,
+        width: Int,
+        height: Int,
+    ) {
         val frameSize = width * height
 
         var yIndex = 0
@@ -209,7 +224,6 @@ class VideoProcessor(private val context: Context, private val detector: Detecto
         var index = 0
         for (j in 0 until height) {
             for (i in 0 until width) {
-
                 a = argb[index] shr 24 and 0xff // unused
                 R = argb[index] shr 16 and 0xff
                 G = argb[index] shr 8 and 0xff
